@@ -138,7 +138,22 @@ word tone_hz[] = {
 
 /* --------- Global Variables -------- */
 
+/* minimum (absolute) value to activate */
+#define JOYSTICK_REL_MIN_THRESH 300
+
 bool DEBUG_PRINT = true;
+
+bool button_pressed_last = false;
+bool button_pressed = false;
+
+// joystick value after dired to get simple
+//  +1 / 0 / -1, for (up,right) / middle / (down,left)
+int joystick_x_dir_last = 0;
+int joystick_x_dir = 0;
+
+int joystick_y_dir_last = 0;
+int joystick_y_dir = 0;
+
 
 
 /* --------- Component Helper Fns -------- */
@@ -240,6 +255,62 @@ void fixed_leds_set(byte leds_bitmask)
              SHIFT_REG_CLOCK_PIN,
              MSBFIRST, leds_bitmask);
     digitalWrite(SHIFT_REG_LATCH_PIN, HIGH);
+}
+
+
+void button_read()
+{
+    // Button Input
+    // - open: pulled-up internlly (HIGH)
+    // - closed: driven to Ground (LOW)
+    int button_raw = digitalRead(PUSH_BUTTON_PIN);
+
+    if (DEBUG_PRINT)
+    {
+        Serial.print("button_read: raw_val=");
+        Serial.println(button_raw);
+    }
+
+    // save last state, before updating
+    button_pressed_last = button_pressed;
+
+    button_pressed = !button_raw;
+}
+
+
+void joystick_read_x_y()
+{
+    int joystick_x_raw = analogRead(JOYSTICK_XAXIS_PIN);
+    int joystick_y_raw = analogRead(JOYSTICK_YAXIS_PIN);
+
+    // joystick Y raw reading seems inverted
+    //  (relative to X's left/right), so flip value
+    joystick_y_raw = 1023 - joystick_y_raw;
+
+    if (DEBUG_PRINT)
+    {
+        Serial.print("joystick_x: raw_val=");
+        Serial.println(joystick_x_raw);
+        Serial.print("joystick_y: raw_val=");
+        Serial.println(joystick_y_raw);
+    }
+
+    // adjust so middle position is zero
+    int joystick_x_rel = joystick_x_raw - 512;
+    int joystick_y_rel = joystick_y_raw - 512;
+
+    // save last state, before updating
+    joystick_x_dir_last = joystick_x_dir;
+    joystick_y_dir_last = joystick_y_dir;
+
+    // apply a dir to get simple +1 / 0 / -1,
+    //  for (up,right) / middle / (down,left)
+    joystick_x_dir =
+            (joystick_x_rel < -JOYSTICK_REL_MIN_THRESH) ? -1 :
+            (joystick_x_rel > +JOYSTICK_REL_MIN_THRESH) ? +1 : 0;
+    joystick_y_dir =
+            (joystick_y_rel < -JOYSTICK_REL_MIN_THRESH) ? -1 :
+            (joystick_y_rel > +JOYSTICK_REL_MIN_THRESH) ? +1 : 0;
 }
 
 
@@ -348,5 +419,7 @@ void setup()
 
 void loop()
 {
+    button_read();
+    joystick_read_x_y();
 }
 
