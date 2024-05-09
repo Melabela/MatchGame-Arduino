@@ -45,8 +45,6 @@ const byte servo_rotation_angles[] = {
 
 const byte MAX_SERVO_ROT_POSN = sizeof(servo_rotation_angles) - 1;
 
-#define NUM_FIXED_LEDS 8
-
 // bit[0] = red
 // bit[1] = green
 // bit[2] = blue
@@ -72,6 +70,21 @@ const byte rgbled_user_colors[] = {
 };
 
 const byte MAX_RGBLED_USER_COLORS = sizeof(rgbled_user_colors) - 1;
+
+/* Board setup, in rainbow color order */
+const byte fixed_leds_colors[] = {
+    RGBLED_RED,
+    RGBLED_YELLOW,
+    RGBLED_GREEN,
+    RGBLED_BLUE,
+    RGBLED_RED,
+    RGBLED_YELLOW,
+    RGBLED_GREEN,
+    RGBLED_BLUE,
+};
+
+const byte NUM_FIXED_LEDS = sizeof(fixed_leds_colors);
+
 
 enum tones_e
 {
@@ -187,12 +200,12 @@ int game_state_last = 0;
 int game_state = 0;
 
 int game_user_position = 0;
-int game_user_color = 0;
+int game_user_color_idx = 0;
 
 int game_frames_remain = 0;
 int game_score = 0;
 
-byte game_round_fixed_LEDs = 0;
+byte game_fixed_leds_mask_on = 0;
 
 
 bool button_pressed_last = false;
@@ -514,8 +527,8 @@ int game_state_start_game()
         servo_set_rotation(game_user_position);
 
         // RGB LED: start with "off" color
-        game_user_color = RGBLED_OFF;
-        rgbled_set_color(game_user_color);
+        game_user_color_idx = -1;
+        rgbled_set_color(RGBLED_OFF);
 
         // set time & score
         game_frames_remain = GAME_START_TIME_SEC * GAME_FRAMES_PER_SEC;
@@ -536,7 +549,7 @@ int game_state_round_new()
         (game_state_last == GAME_ST_ROUND_DONE))
     {
         // randomly pick a few Fixed LEDs to enable
-        game_round_fixed_LEDs = 0x00;
+        game_fixed_leds_mask_on = 0x00;
 
         byte num_leds = random(1, 4);  // [1..3]
         byte n_chosen = 0;
@@ -544,14 +557,14 @@ int game_state_round_new()
         {
             byte led_choice = random(0, NUM_FIXED_LEDS);
             byte choice_bit = (1 << led_choice);
-            if ( !(game_round_fixed_LEDs & choice_bit) )
+            if ( !(game_fixed_leds_mask_on & choice_bit) )
             {
-                game_round_fixed_LEDs |= choice_bit;
+                game_fixed_leds_mask_on |= choice_bit;
                 n_chosen++;
             }
         }
 
-        fixed_leds_set(game_round_fixed_LEDs);
+        fixed_leds_set(game_fixed_leds_mask_on);
 
         // set LCD fixed text
         lcd.clear();
@@ -672,21 +685,21 @@ void handle_inputs_round()
 
             if (apply_color)
             {
-                int user_color = game_user_color;
-                user_color += joystick_y_dir;
+                int user_color_idx = game_user_color_idx;
+                user_color_idx += joystick_y_dir;
 
                 // allow value roll-over on both ends
-                if (user_color < 0)
+                if (user_color_idx < 0)
                 {
-                    user_color = MAX_RGBLED_USER_COLORS;
+                    user_color_idx = MAX_RGBLED_USER_COLORS;
                 }
-                else if (user_color > MAX_RGBLED_USER_COLORS)
+                else if (user_color_idx > MAX_RGBLED_USER_COLORS)
                 {
-                    user_color = 0;
+                    user_color_idx = 0;
                 }
 
-                game_user_color = user_color;
-                int color_val = rgbled_user_colors[game_user_color];
+                game_user_color_idx = user_color_idx;
+                int color_val = rgbled_user_colors[game_user_color_idx];
                 rgbled_set_color(color_val);
 
                 // set cooldown, delay apply if dir is held
