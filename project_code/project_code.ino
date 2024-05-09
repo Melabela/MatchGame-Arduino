@@ -614,13 +614,22 @@ int game_state_end_game()
         lcd.print("Game Over.");
 
         // setup wait counter, to hold & display above msg
-        game_end_wait_frames = 3 * GAME_FRAMES_PER_SEC;
+        game_end_wait_frames = 6 * GAME_FRAMES_PER_SEC;
     }
 
     if (game_state_last == GAME_ST_END_GAME)
     {
         game_end_wait_frames--;
-        if (game_end_wait_frames <= 0)
+        if (game_end_wait_frames == (3 * GAME_FRAMES_PER_SEC))
+        {
+            lcd.clear();
+            lcd.setCursor(2, 0);
+            lcd.print("Game Over.");
+            lcd.setCursor(0, 1);
+            lcd.print("Your Score: ");
+            lcd.print(game_score);
+        }
+        else if (game_end_wait_frames <= 0)
         {
             // move back to pre-game, wait to start again
             return GAME_ST_WAIT_START;
