@@ -446,38 +446,74 @@ void setup()
 
 /* --------- Main Loop -------- */
 
-void game_state_wait_start()
+int game_state_wait_start()
 {
+    /* NONE / END_GAME -> WAIT_START */
+    if ((game_state_last == GAME_ST_NONE) ||
+        (game_state_last == GAME_ST_END_GAME))
+    {
+        // update display message, tell user to start
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("Press Button");
+        lcd.setCursor(0, 1);
+        lcd.print(" to Start game.");
+
+        // reset button stored states
+        button_pressed = button_pressed_last = 0;
+        return GAME_ST_WAIT_START;
+    }
+
+    /* WAIT_START -> WAIT_START */
+    else if (game_state_last == GAME_ST_WAIT_START)
+    {
+        // accept button press to start
+        button_read();
+        if (button_pressed && !button_pressed_last)
+        {
+            // move to next state
+            return GAME_ST_START_GAME;
+        }
+    }
+
+    return GAME_ST_WAIT_START;
 }
 
 
-void game_state_start_game()
+int game_state_start_game()
 {
+    return GAME_ST_START_GAME;
 }
 
 
-void game_state_round_new()
+int game_state_round_new()
 {
+    return GAME_ST_ROUND_NEW;
 }
 
 
-void game_state_round_in_prog()
+int game_state_round_in_prog()
 {
+    return GAME_ST_ROUND_IN_PROG;
 }
 
 
-void game_state_round_done()
+int game_state_round_done()
 {
+    return GAME_ST_ROUND_DONE;
 }
 
 
-void game_state_end_game()
+int game_state_end_game()
 {
+    return GAME_ST_END_GAME;
 }
 
 
 void process_frame()
 {
+    int state_next;
+
     if (game_state_last != game_state)
     {
         Serial.println("start process_frame()");
@@ -490,30 +526,32 @@ void process_frame()
     switch (game_state)
     {
     case GAME_ST_NONE:
-        game_state = GAME_ST_WAIT_START;
+        state_next = GAME_ST_WAIT_START;
         break;
     case GAME_ST_WAIT_START:
-        game_state_wait_start();
+        state_next = game_state_wait_start();
         break;
     case GAME_ST_START_GAME:
-        game_state_start_game();
+        state_next = game_state_start_game();
         break;
     case GAME_ST_ROUND_NEW:
-        game_state_round_new();
+        state_next = game_state_round_new();
         break;
     case GAME_ST_ROUND_IN_PROG:
-        game_state_round_in_prog();
+        state_next = game_state_round_in_prog();
         break;
     case GAME_ST_ROUND_DONE:
-        game_state_round_done();
+        state_next = game_state_round_done();
         break;
     case GAME_ST_END_GAME:
-        game_state_end_game();
+        state_next = game_state_end_game();
         break;
     };
 
     /* capture current state -> last */
     game_state_last = game_state;
+    /* update next_state -> current */
+    game_state = state_next;
 }
 
 
