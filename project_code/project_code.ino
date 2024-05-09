@@ -169,7 +169,12 @@ enum game_states_e
 int game_state_last = 0;
 int game_state = 0;
 
-unsigned long millis_at_last_frame = 0;
+int game_user_position = 0;
+int game_user_color = 0;
+
+int game_frames_remain = 0;
+int game_score = 0;
+
 
 
 bool button_pressed_last = false;
@@ -183,6 +188,7 @@ int joystick_x_dir = 0;
 int joystick_y_dir_last = 0;
 int joystick_y_dir = 0;
 
+unsigned long millis_at_last_frame = 0;
 
 
 /* --------- Component Helper Fns -------- */
@@ -482,6 +488,25 @@ int game_state_wait_start()
 
 int game_state_start_game()
 {
+    /* WAIT_START -> START_GAME */
+    if (game_state_last == GAME_ST_WAIT_START)
+    {
+        // rotation: start in middle position
+        game_user_position = MAX_SERVO_ROT_POSN / 2;
+        servo_set_rotation(game_user_position);
+
+        // RGB LED: start with "off" color
+        game_user_color = RGBLED_OFF;
+        rgbled_set_color(game_user_color);
+
+        // set time & score
+        game_frames_remain = GAME_START_TIME_SEC * GAME_FRAMES_PER_SEC;
+        game_score = 0;
+
+        // move to next state
+        return GAME_ST_ROUND_NEW;
+    }
+
     return GAME_ST_START_GAME;
 }
 
