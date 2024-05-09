@@ -45,6 +45,8 @@ const byte servo_rotation_angles[] = {
 
 const byte MAX_SERVO_ROT_POSN = sizeof(servo_rotation_angles) - 1;
 
+#define NUM_FIXED_LEDS 8
+
 // bit[0] = red
 // bit[1] = green
 // bit[2] = blue
@@ -185,6 +187,7 @@ int game_user_color = 0;
 int game_frames_remain = 0;
 int game_score = 0;
 
+byte game_round_fixed_LEDs = 0;
 
 
 bool button_pressed_last = false;
@@ -523,12 +526,63 @@ int game_state_start_game()
 
 int game_state_round_new()
 {
+    /* START_NEW / ROUND_DONE -> ROUND_NEW */
+    if ((game_state_last == GAME_ST_START_GAME) ||
+        (game_state_last == GAME_ST_ROUND_DONE))
+    {
+        // randomly pick a few Fixed LEDs to enable
+        game_round_fixed_LEDs = 0x00;
+
+        byte num_leds = random(1, 4);  // [1..3]
+        byte n_chosen = 0;
+        while(n_chosen < num_leds)
+        {
+            byte led_choice = random(0, NUM_FIXED_LEDS);
+            byte choice_bit = (1 << led_choice);
+            if ( !(game_round_fixed_LEDs & choice_bit) )
+            {
+                game_round_fixed_LEDs |= choice_bit;
+                n_chosen++;
+            }
+        }
+
+        fixed_leds_set(game_round_fixed_LEDs);
+
+        // set LCD fixed text
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("Time Left: ");
+        int time_seconds_left = game_frames_remain / GAME_FRAMES_PER_SEC;
+        lcd.print(time_seconds_left);
+        lcd.setCursor(0, 1);
+        lcd.print("Score: ");
+        lcd.print(game_score);
+
+        // move to next state
+        return GAME_ST_ROUND_IN_PROG;
+    }
+
     return GAME_ST_ROUND_NEW;
+}
+
+
+void display_update_time_score()
+{
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Time Left: ");
+    int time_seconds_left = game_frames_remain / GAME_FRAMES_PER_SEC;
+    lcd.print(time_seconds_left);
+    lcd.setCursor(0, 1);
+    lcd.print("Score: ");
+    lcd.print(game_score);
 }
 
 
 int game_state_round_in_prog()
 {
+    display_update_time_score();
+
     return GAME_ST_ROUND_IN_PROG;
 }
 
@@ -587,6 +641,15 @@ void process_frame()
     game_state_last = game_state;
     /* update next_state -> current */
     game_state = state_next;
+
+    /* count down frames if game active */
+    if (game_state > GAME_ST_START_GAME)
+    {
+        if (--game_frames_remain <= 0)
+        {
+            game_state = GAME_ST_END_GAME;
+        }
+    }
 }
 
 
