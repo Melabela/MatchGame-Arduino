@@ -340,7 +340,7 @@ void joystick_read_x_y()
     //  (relative to X's left/right), so flip value
     joystick_y_raw = 1023 - joystick_y_raw;
 
-    if (DEBUG_PRINT)
+    if (0)  // (DEBUG_PRINT)
     {
         Serial.print("joystick_x: raw_val=");
         Serial.println(joystick_x_raw);
