@@ -294,7 +294,7 @@ void button_read()
     // - closed: driven to Ground (LOW)
     int button_raw = digitalRead(PUSH_BUTTON_PIN);
 
-    if (DEBUG_PRINT)
+    if (0)  // (DEBUG_PRINT)
     {
         Serial.print("button_read: raw_val=");
         Serial.println(button_raw);
