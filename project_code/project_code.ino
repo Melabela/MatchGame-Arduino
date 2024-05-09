@@ -141,7 +141,36 @@ word tone_hz[] = {
 /* minimum (absolute) value to activate */
 #define JOYSTICK_REL_MIN_THRESH 300
 
+#define GAME_START_TIME_SEC 30
+#define GAME_FRAMES_PER_SEC 60
+
+#define MILLIS_PER_FRAME 16
+
 bool DEBUG_PRINT = true;
+
+enum game_states_e
+{
+    // post-setup() first state
+    GAME_ST_NONE = 0,
+    // waiting for user to start game
+    GAME_ST_WAIT_START,
+    // initiate game
+    GAME_ST_START_GAME,
+    // new round: pick fixed leds
+    GAME_ST_ROUND_NEW,
+    // round in progress: user matching
+    GAME_ST_ROUND_IN_PROG,
+    // round done: award points, etc.
+    GAME_ST_ROUND_DONE,
+    // game done: time expired
+    GAME_ST_END_GAME,
+};
+
+int game_state_last = 0;
+int game_state = 0;
+
+unsigned long millis_at_last_frame = 0;
+
 
 bool button_pressed_last = false;
 bool button_pressed = false;
@@ -417,10 +446,90 @@ void setup()
 
 /* --------- Main Loop -------- */
 
+void game_state_wait_start()
+{
+}
+
+
+void game_state_start_game()
+{
+}
+
+
+void game_state_round_new()
+{
+}
+
+
+void game_state_round_in_prog()
+{
+}
+
+
+void game_state_round_done()
+{
+}
+
+
+void game_state_end_game()
+{
+}
+
+
+void process_frame()
+{
+    if (game_state_last != game_state)
+    {
+        Serial.println("start process_frame()");
+        Serial.print(" - game_state (last -> now): ");
+        Serial.print(game_state_last);
+        Serial.print(" -> ");
+        Serial.println(game_state);
+    }
+
+    switch (game_state)
+    {
+    case GAME_ST_NONE:
+        game_state = GAME_ST_WAIT_START;
+        break;
+    case GAME_ST_WAIT_START:
+        game_state_wait_start();
+        break;
+    case GAME_ST_START_GAME:
+        game_state_start_game();
+        break;
+    case GAME_ST_ROUND_NEW:
+        game_state_round_new();
+        break;
+    case GAME_ST_ROUND_IN_PROG:
+        game_state_round_in_prog();
+        break;
+    case GAME_ST_ROUND_DONE:
+        game_state_round_done();
+        break;
+    case GAME_ST_END_GAME:
+        game_state_end_game();
+        break;
+    };
+
+    /* capture current state -> last */
+    game_state_last = game_state;
+}
+
 
 void loop()
 {
-    button_read();
-    joystick_read_x_y();
+    unsigned long millis_now = millis();
+    long millis_delta = millis_now - millis_at_last_frame;
+
+    if (millis_delta > MILLIS_PER_FRAME)
+    {
+        millis_at_last_frame = millis_now;
+        process_frame();
+    }
+    else
+    {
+        delay(2);
+    }
 }
 
