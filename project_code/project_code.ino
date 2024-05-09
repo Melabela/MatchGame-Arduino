@@ -143,6 +143,11 @@ word tone_hz[] = {
 /* minimum (absolute) value to activate */
 #define JOYSTICK_REL_MIN_THRESH 300
 
+/* frames to not-apply input in held,
+ *  to make movements/changes more discrete */
+#define JOYSTICK_X_COOLDOWN_FRAMES 6
+#define JOYSTICK_Y_COOLDOWN_FRAMES 10
+
 #define GAME_START_TIME_SEC 30
 #define GAME_FRAMES_PER_SEC 60
 
@@ -592,6 +597,11 @@ void check_for_match()
 
 void handle_inputs_round()
 {
+    /* add counters so if joystick input is held,
+     *  we do not apply its input every frame */
+    static int joy_x_dir_cooldown = 0;
+    static int joy_y_dir_cooldown = 0;
+
     /* Check inputs & act (in priority order)
      * ----
      * 1. button_pressed:
@@ -616,34 +626,72 @@ void handle_inputs_round()
         /* change rotation position */
         if (joystick_x_dir != 0)
         {
-            int user_pos = game_user_position;
-            user_pos += joystick_x_dir;
-            // bound at left/right ends, can't turn further
-            user_pos = cap_value(user_pos, 0, MAX_SERVO_ROT_POSN);
+            bool apply_movement = false;
 
-            game_user_position = user_pos;
-            servo_set_rotation(game_user_position);
+            if (joystick_x_dir != joystick_x_dir_last)
+            {
+                // first frame joystick_x_dir changed
+                apply_movement = true;
+            }
+            else if (--joy_x_dir_cooldown <= 0)
+            {
+                // dir held, and cooldown over
+                apply_movement = true;
+            }
+
+            if (apply_movement)
+            {
+                int user_pos = game_user_position;
+                user_pos += joystick_x_dir;
+                // bound at left/right ends, can't turn further
+                user_pos = cap_value(user_pos, 0, MAX_SERVO_ROT_POSN);
+
+                game_user_position = user_pos;
+                servo_set_rotation(game_user_position);
+
+                // set cooldown again, in case still held
+                joy_x_dir_cooldown = JOYSTICK_X_COOLDOWN_FRAMES;
+            }
         }
 
         /* change rgbled color */
         if (joystick_y_dir != 0)
         {
-            int user_color = game_user_color;
-            user_color += joystick_y_dir;
+            bool apply_color = false;
 
-            // allow value roll-over on both ends
-            if (user_color < 0)
+            if (joystick_y_dir != joystick_y_dir_last)
             {
-                user_color = MAX_RGBLED_USER_COLORS;
+                // first frame joystick_y_dir changed
+                apply_color = true;
             }
-            else if (user_color > MAX_RGBLED_USER_COLORS)
+            else if (--joy_y_dir_cooldown <= 0)
             {
-                user_color = 0;
+                // dir held, and cooldown over
+                apply_color = true;
             }
 
-            game_user_color = user_color;
-            int color_val = rgbled_user_colors[game_user_color];
-            rgbled_set_color(color_val);
+            if (apply_color)
+            {
+                int user_color = game_user_color;
+                user_color += joystick_y_dir;
+
+                // allow value roll-over on both ends
+                if (user_color < 0)
+                {
+                    user_color = MAX_RGBLED_USER_COLORS;
+                }
+                else if (user_color > MAX_RGBLED_USER_COLORS)
+                {
+                    user_color = 0;
+                }
+
+                game_user_color = user_color;
+                int color_val = rgbled_user_colors[game_user_color];
+                rgbled_set_color(color_val);
+
+                // set cooldown, delay apply if dir is held
+                joy_y_dir_cooldown = JOYSTICK_Y_COOLDOWN_FRAMES;
+            }
         }
     }
 }
