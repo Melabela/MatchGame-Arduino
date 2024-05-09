@@ -603,8 +603,49 @@ void display_update_time_score()
 }
 
 
-void check_for_match()
+bool check_for_match()
 {
+    bool bIsMatch = false;
+
+    /* 1. current position is at one of the Fixed LEDs?
+     *     (not at a gap == ODD positions) */
+    bool bAtNonGapPosn = (game_user_position & 0x1) == 0;
+    if (bAtNonGapPosn)
+    {
+        /* 2. is the Fixed LEDs at current position lit? */
+        // downscale Posn from [0..14] -> [0..7]
+        byte userPosnIdx = (game_user_position >> 1);
+        bool bFixedLedAtPosnLit = ((game_fixed_leds_mask_on & (1 << userPosnIdx)) != 0);
+        if (bFixedLedAtPosnLit)
+        {
+            /* 3. does chosen color on RGBLED match that of fixed LED? */
+            byte fixedLedColorAtPosn = fixed_leds_colors[userPosnIdx];
+            byte userRgbLedColor = rgbled_user_colors[game_user_color_idx];
+            bool bLedColorsMatch = (fixedLedColorAtPosn == userRgbLedColor);
+            if (bLedColorsMatch)
+            {
+                bIsMatch = true;
+            }
+        }
+    }
+
+    return bIsMatch;
+}
+
+
+void update_on_match()
+{
+    // downscale Posn from [0..14] -> [0..7]
+    byte userPosnIdx = (game_user_position >> 1);
+
+    /* clear matched Fixed LED */
+    byte fixedLed_bitmask = (1 << userPosnIdx);
+    game_fixed_leds_mask_on &= ~fixedLed_bitmask;
+
+    fixed_leds_set(game_fixed_leds_mask_on);
+
+    /* increment user score */
+    game_score++;
 }
 
 
@@ -630,7 +671,11 @@ void handle_inputs_round()
     button_read();
     if (button_pressed)
     {
-        check_for_match();
+        bool bHaveMatch = check_for_match();
+        if (bHaveMatch)
+        {
+            update_on_match();
+        }
     }
     else
     {
@@ -715,6 +760,13 @@ int game_state_round_in_prog()
     display_update_time_score();
 
     handle_inputs_round();
+
+    /* if all Fixed LEDs cleared (i.e. none lit)
+     *  due to matches, move to next state */
+    if (game_fixed_leds_mask_on == 0x00)
+    {
+        return GAME_ST_ROUND_DONE;
+    }
 
     return GAME_ST_ROUND_IN_PROG;
 }
