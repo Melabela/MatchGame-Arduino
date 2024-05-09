@@ -33,11 +33,14 @@ Servo servo;
 
 // 8x Fixed-LEDs, and 7x gap positions in between = 15 total positions
 // - center on 90 degrees; 
-// - +/- 10 degrees per step;
+// - +/- 12 degrees per step;
+// - descending angle order, to get desired rotation:
+//     - left (low idx) = close to 9-oclock
+//     - right (high idx) = close to 3-oclock
 const byte servo_rotation_angles[] = {
-     20,  30,  40,  50,  60,
-     70,  80,  90, 100, 110,
-    120, 130, 140, 150, 160
+    174, 162, 150, 138, 126,
+    114, 102,  90,  78,  66,
+     54,  42,  30,  18,   6
 };
 
 const byte MAX_SERVO_ROT_POSN = sizeof(servo_rotation_angles) - 1;
