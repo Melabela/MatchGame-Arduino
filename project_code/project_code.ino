@@ -166,6 +166,16 @@ enum game_states_e
     GAME_ST_END_GAME,
 };
 
+const char* game_state_names[] = {
+    "GAME_ST_NONE",
+    "GAME_ST_WAIT_START",
+    "GAME_ST_START_GAME",
+    "GAME_ST_ROUND_NEW",
+    "GAME_ST_ROUND_IN_PROG",
+    "GAME_ST_ROUND_DONE",
+    "GAME_ST_END_GAME",
+};
+
 int game_state_last = 0;
 int game_state = 0;
 
@@ -543,9 +553,9 @@ void process_frame()
     {
         Serial.println("start process_frame()");
         Serial.print(" - game_state (last -> now): ");
-        Serial.print(game_state_last);
+        Serial.print(game_state_names[game_state_last]);
         Serial.print(" -> ");
-        Serial.println(game_state);
+        Serial.println(game_state_names[game_state]);
     }
 
     switch (game_state)
