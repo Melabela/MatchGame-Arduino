@@ -585,9 +585,75 @@ void display_update_time_score()
 }
 
 
+void check_for_match()
+{
+}
+
+
+void handle_inputs_round()
+{
+    /* Check inputs & act (in priority order)
+     * ----
+     * 1. button_pressed:
+     *    - check match at current position/color
+     *    - (ignore joystick inputs)
+     *
+     * 2a. joystick_x:
+     *     - change rotation position
+     * 2b. joystick_y:
+     *     - change RGB_LED color
+     */
+
+    button_read();
+    if (button_pressed)
+    {
+        check_for_match();
+    }
+    else
+    {
+        joystick_read_x_y();
+
+        /* change rotation position */
+        if (joystick_x_dir != 0)
+        {
+            int user_pos = game_user_position;
+            user_pos += joystick_x_dir;
+            // bound at left/right ends, can't turn further
+            user_pos = cap_value(user_pos, 0, MAX_SERVO_ROT_POSN);
+
+            game_user_position = user_pos;
+            servo_set_rotation(game_user_position);
+        }
+
+        /* change rgbled color */
+        if (joystick_y_dir != 0)
+        {
+            int user_color = game_user_color;
+            user_color += joystick_y_dir;
+
+            // allow value roll-over on both ends
+            if (user_color < 0)
+            {
+                user_color = MAX_RGBLED_USER_COLORS;
+            }
+            else if (user_color > MAX_RGBLED_USER_COLORS)
+            {
+                user_color = 0;
+            }
+
+            game_user_color = user_color;
+            int color_val = rgbled_user_colors[game_user_color];
+            rgbled_set_color(color_val);
+        }
+    }
+}
+
+
 int game_state_round_in_prog()
 {
     display_update_time_score();
+
+    handle_inputs_round();
 
     return GAME_ST_ROUND_IN_PROG;
 }
