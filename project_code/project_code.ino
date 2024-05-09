@@ -552,11 +552,8 @@ int game_state_round_new()
         lcd.clear();
         lcd.setCursor(0, 0);
         lcd.print("Time Left: ");
-        int time_seconds_left = game_frames_remain / GAME_FRAMES_PER_SEC;
-        lcd.print(time_seconds_left);
         lcd.setCursor(0, 1);
         lcd.print("Score: ");
-        lcd.print(game_score);
 
         // move to next state
         return GAME_ST_ROUND_IN_PROG;
@@ -568,13 +565,22 @@ int game_state_round_new()
 
 void display_update_time_score()
 {
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Time Left: ");
-    int time_seconds_left = game_frames_remain / GAME_FRAMES_PER_SEC;
-    lcd.print(time_seconds_left);
-    lcd.setCursor(0, 1);
-    lcd.print("Score: ");
+    // NO clear() to avoid flicker, and update the minimum text needed
+    // - FYI labels per line, were set in game_state_round_new()
+
+    int time_secs_left = game_frames_remain / GAME_FRAMES_PER_SEC;
+    int tenth_sec_left = (game_frames_remain % GAME_FRAMES_PER_SEC) / 6;
+
+    lcd.setCursor(11, 0);
+    if (time_secs_left < 10)
+    {
+        lcd.print(' ');
+    }
+    lcd.print(time_secs_left);
+    lcd.print('.');
+    lcd.print(tenth_sec_left);
+
+    lcd.setCursor(7, 1);
     lcd.print(game_score);
 }
 
