@@ -601,6 +601,32 @@ int game_state_round_done()
 
 int game_state_end_game()
 {
+    static int game_end_wait_frames = 0;
+
+    /* Can come from most other states,
+        since move here on time_remain empty */
+    if (game_state_last != GAME_ST_END_GAME)
+    {
+        lcd.clear();
+        lcd.setCursor(2, 0);
+        lcd.print("Time Up...");
+        lcd.setCursor(2, 1);
+        lcd.print("Game Over.");
+
+        // setup wait counter, to hold & display above msg
+        game_end_wait_frames = 3 * GAME_FRAMES_PER_SEC;
+    }
+
+    if (game_state_last == GAME_ST_END_GAME)
+    {
+        game_end_wait_frames--;
+        if (game_end_wait_frames <= 0)
+        {
+            // move back to pre-game, wait to start again
+            return GAME_ST_WAIT_START;
+        }
+    }
+
     return GAME_ST_END_GAME;
 }
 
