@@ -409,8 +409,9 @@ void setup()
 {
     Serial.begin(115200);
     init_IOs();
-    startup_checks();
+    // startup_checks();
     lcd.clear();
+    delay(500);
 }
 
 
