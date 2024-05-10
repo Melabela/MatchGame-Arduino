@@ -37,10 +37,12 @@ Servo servo;
 // - descending angle order, to get desired rotation:
 //     - left (low idx) = close to 9-oclock
 //     - right (high idx) = close to 3-oclock
+// - end-angles tweaked, this servo turns a bit less than expected
+//     towards 0 & 180 degree angles
 const byte servo_rotation_angles[] = {
-    174, 162, 150, 138, 126,
-    114, 102,  90,  78,  66,
-     54,  42,  30,  18,   6
+    180, 167, 154, 141, 128,
+    115, 102,  90,  78,  65,
+     52,  39,  26,  13,   0
 };
 
 const byte MAX_SERVO_ROT_POSN = sizeof(servo_rotation_angles) - 1;
