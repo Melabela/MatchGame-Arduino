@@ -773,6 +773,17 @@ int game_state_round_in_prog()
 
 int game_state_round_done()
 {
+    display_update_time_score();
+
+    /* ROUND_IN_PROG -> ROUND_DONE */
+    if (game_state_last == GAME_ST_ROUND_IN_PROG)
+    {
+        // TODO:  any processing here??
+
+        // move back to top of round
+        return GAME_ST_ROUND_NEW;
+    }
+
     return GAME_ST_ROUND_DONE;
 }
 
