@@ -85,7 +85,6 @@ const byte fixed_leds_colors[] = {
 
 const byte NUM_FIXED_LEDS = sizeof(fixed_leds_colors);
 
-
 enum tones_e
 {
     TONE_OFF = -1,
@@ -207,7 +206,6 @@ int game_score = 0;
 
 byte game_fixed_leds_mask_on = 0;
 
-
 bool button_pressed_last = false;
 bool button_pressed = false;
 
@@ -218,8 +216,6 @@ int joystick_x_dir = 0;
 
 int joystick_y_dir_last = 0;
 int joystick_y_dir = 0;
-
-unsigned long millis_at_last_frame = 0;
 
 
 /* --------- Component Helper Fns -------- */
@@ -481,7 +477,7 @@ void setup()
 }
 
 
-/* --------- Main Loop -------- */
+/* --------- Main Loop & Game States -------- */
 
 int game_state_wait_start()
 {
@@ -885,6 +881,8 @@ void process_frame()
 
 void loop()
 {
+    static unsigned long millis_at_last_frame = 0;
+
     unsigned long millis_now = millis();
     long millis_delta = millis_now - millis_at_last_frame;
 
