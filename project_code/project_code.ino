@@ -530,6 +530,13 @@ int game_state_start_game()
         game_frames_remain = GAME_START_TIME_SEC * GAME_FRAMES_PER_SEC;
         game_score = 0;
 
+        // set LCD fixed text
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("Time Left: ");
+        lcd.setCursor(0, 1);
+        lcd.print("Score: ");
+
         // move to next state
         return GAME_ST_ROUND_NEW;
     }
@@ -541,7 +548,7 @@ int game_state_start_game()
 void display_update_time_score()
 {
     // NO clear() to avoid flicker, and update the minimum text needed
-    // - FYI labels per line, were set in game_state_round_new()
+    // - FYI labels per line, were set in game_state_start_game()
 
     int time_secs_left = game_frames_remain / GAME_FRAMES_PER_SEC;
     int tenth_sec_left = (game_frames_remain % GAME_FRAMES_PER_SEC) / 6;
@@ -560,6 +567,26 @@ void display_update_time_score()
 }
 
 
+void pick_random_fixed_leds()
+{
+    // randomly pick a few Fixed LEDs to enable
+    game_fixed_leds_mask_on = 0x00;
+
+    byte num_leds = random(1, 4);  // [1..3]
+    byte n_chosen = 0;
+    while(n_chosen < num_leds)
+    {
+        byte led_choice = random(0, NUM_FIXED_LEDS);
+        byte choice_bit = (1 << led_choice);
+        if ( !(game_fixed_leds_mask_on & choice_bit) )
+        {
+            game_fixed_leds_mask_on |= choice_bit;
+            n_chosen++;
+        }
+    }
+}
+
+
 int game_state_round_new()
 {
     display_update_time_score();
@@ -568,30 +595,8 @@ int game_state_round_new()
     if ((game_state_last == GAME_ST_START_GAME) ||
         (game_state_last == GAME_ST_ROUND_DONE))
     {
-        // randomly pick a few Fixed LEDs to enable
-        game_fixed_leds_mask_on = 0x00;
-
-        byte num_leds = random(1, 4);  // [1..3]
-        byte n_chosen = 0;
-        while(n_chosen < num_leds)
-        {
-            byte led_choice = random(0, NUM_FIXED_LEDS);
-            byte choice_bit = (1 << led_choice);
-            if ( !(game_fixed_leds_mask_on & choice_bit) )
-            {
-                game_fixed_leds_mask_on |= choice_bit;
-                n_chosen++;
-            }
-        }
-
+        pick_random_fixed_leds();
         fixed_leds_set(game_fixed_leds_mask_on);
-
-        // set LCD fixed text
-        lcd.clear();
-        lcd.setCursor(0, 0);
-        lcd.print("Time Left: ");
-        lcd.setCursor(0, 1);
-        lcd.print("Score: ");
 
         // move to next state
         return GAME_ST_ROUND_IN_PROG;
