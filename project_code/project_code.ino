@@ -538,8 +538,32 @@ int game_state_start_game()
 }
 
 
+void display_update_time_score()
+{
+    // NO clear() to avoid flicker, and update the minimum text needed
+    // - FYI labels per line, were set in game_state_round_new()
+
+    int time_secs_left = game_frames_remain / GAME_FRAMES_PER_SEC;
+    int tenth_sec_left = (game_frames_remain % GAME_FRAMES_PER_SEC) / 6;
+
+    lcd.setCursor(11, 0);
+    if (time_secs_left < 10)
+    {
+        lcd.print(' ');
+    }
+    lcd.print(time_secs_left);
+    lcd.print('.');
+    lcd.print(tenth_sec_left);
+
+    lcd.setCursor(7, 1);
+    lcd.print(game_score);
+}
+
+
 int game_state_round_new()
 {
+    display_update_time_score();
+
     /* START_NEW / ROUND_DONE -> ROUND_NEW */
     if ((game_state_last == GAME_ST_START_GAME) ||
         (game_state_last == GAME_ST_ROUND_DONE))
@@ -574,28 +598,6 @@ int game_state_round_new()
     }
 
     return GAME_ST_ROUND_NEW;
-}
-
-
-void display_update_time_score()
-{
-    // NO clear() to avoid flicker, and update the minimum text needed
-    // - FYI labels per line, were set in game_state_round_new()
-
-    int time_secs_left = game_frames_remain / GAME_FRAMES_PER_SEC;
-    int tenth_sec_left = (game_frames_remain % GAME_FRAMES_PER_SEC) / 6;
-
-    lcd.setCursor(11, 0);
-    if (time_secs_left < 10)
-    {
-        lcd.print(' ');
-    }
-    lcd.print(time_secs_left);
-    lcd.print('.');
-    lcd.print(tenth_sec_left);
-
-    lcd.setCursor(7, 1);
-    lcd.print(game_score);
 }
 
 
