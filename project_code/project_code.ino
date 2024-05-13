@@ -801,6 +801,11 @@ int game_state_end_game()
         since move here on time_remain empty */
     if (game_state_last != GAME_ST_END_GAME)
     {
+        // turn off all LEDs
+        fixed_leds_set(0x00);
+        rgbled_set_color(RGBLED_OFF);
+
+        // display first game over msg
         lcd.clear();
         lcd.setCursor(2, 0);
         lcd.print("Time Up...");
@@ -816,6 +821,7 @@ int game_state_end_game()
         game_end_wait_frames--;
         if (game_end_wait_frames == (3 * GAME_FRAMES_PER_SEC))
         {
+            // display second game over msg
             lcd.clear();
             lcd.setCursor(2, 0);
             lcd.print("Game Over.");
