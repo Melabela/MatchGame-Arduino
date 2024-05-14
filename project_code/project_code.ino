@@ -825,15 +825,36 @@ int game_state_round_in_prog()
 
 int game_state_round_done()
 {
+    static int round_done_wait_frames = 0;
+
     display_update_time_score();
 
     /* ROUND_IN_PROG -> ROUND_DONE */
     if (game_state_last == GAME_ST_ROUND_IN_PROG)
     {
-        // TODO:  any processing here??
+        round_done_wait_frames = 1 + ((GAME_FRAMES_PER_SEC * 3) / 10);
+    }
 
-        // move back to top of round
-        return GAME_ST_ROUND_NEW;
+    /* GAME_ST_ROUND_DONE -> ROUND_DONE */
+    if (game_state_last == GAME_ST_ROUND_DONE)
+    {
+        round_done_wait_frames--;
+
+        switch (round_done_wait_frames)
+        {
+        case (GAME_FRAMES_PER_SEC * 2) / 10:
+            // play an extra tone
+            buzzer_play_tone(TONE_G4_sh, 160);
+            break;
+        case (GAME_FRAMES_PER_SEC * 1) / 10:
+            // play an extra tone
+            buzzer_play_tone(TONE_A4, 160);
+            break;
+        case 0:
+            buzzer_play_tone(TONE_OFF, 0);
+            // move back to top of round
+            return GAME_ST_ROUND_NEW;
+        }
     }
 
     return GAME_ST_ROUND_DONE;
@@ -956,7 +977,7 @@ void process_frame()
     game_state = state_next;
 
     /* count down frames if game active */
-    if (game_state > GAME_ST_START_GAME)
+    if (game_state == GAME_ST_ROUND_IN_PROG)
     {
         if (--game_frames_remain <= 0)
         {
