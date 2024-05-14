@@ -517,6 +517,8 @@ int game_state_wait_start()
 
 int game_state_start_game()
 {
+    static int game_start_wait_frames = 0;
+
     /* WAIT_START -> START_GAME */
     if (game_state_last == GAME_ST_WAIT_START)
     {
@@ -539,8 +541,44 @@ int game_state_start_game()
         lcd.setCursor(0, 1);
         lcd.print("Score: ");
 
-        // move to next state
-        return GAME_ST_ROUND_NEW;
+        // set counter for music tones
+        game_start_wait_frames = 1 + ((GAME_FRAMES_PER_SEC * 5) / 10);
+    }
+
+    /* START_GAME -> START_GAME */
+    // play intro "music", a rising scale
+    if (game_state_last == GAME_ST_START_GAME)
+    {
+        game_start_wait_frames--;
+
+        switch (game_start_wait_frames)
+        {
+        case (GAME_FRAMES_PER_SEC * 5) / 10:
+            buzzer_play_tone(TONE_OFF, 0);
+            buzzer_play_tone(TONE_A3, 100);
+            break;
+        case (GAME_FRAMES_PER_SEC * 4) / 10:
+            buzzer_play_tone(TONE_OFF, 0);
+            buzzer_play_tone(TONE_B3, 100);
+            break;
+        case (GAME_FRAMES_PER_SEC * 3) / 10:
+            buzzer_play_tone(TONE_OFF, 0);
+            buzzer_play_tone(TONE_C4_sh, 100);
+            break;
+        case (GAME_FRAMES_PER_SEC * 2) / 10:
+            buzzer_play_tone(TONE_OFF, 0);
+            buzzer_play_tone(TONE_D4, 100);
+            break;
+        case (GAME_FRAMES_PER_SEC * 1) / 10:
+            buzzer_play_tone(TONE_OFF, 0);
+            buzzer_play_tone(TONE_E4, 100);
+            break;
+        case 0:
+            buzzer_play_tone(TONE_OFF, 0);
+            // move to next state
+            return GAME_ST_ROUND_NEW;
+            break;
+        }
     }
 
     return GAME_ST_START_GAME;
