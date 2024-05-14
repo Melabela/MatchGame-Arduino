@@ -638,13 +638,14 @@ bool check_for_match()
 }
 
 
-void update_on_match()
+void update_round_on_match()
 {
-    // downscale Posn from [0..14] -> [0..7]
-    byte userPosnIdx = (game_user_position >> 1);
+    // downscale from User Pos'ns [0..14],
+    //  to Fixed LED indexes [0..7]
+    byte fixedLedPosnIdx = (game_user_position >> 1);
 
     /* clear matched Fixed LED */
-    byte fixedLed_bitmask = (1 << userPosnIdx);
+    byte fixedLed_bitmask = (1 << fixedLedPosnIdx);
     game_fixed_leds_mask_on &= ~fixedLed_bitmask;
 
     fixed_leds_set(game_fixed_leds_mask_on);
@@ -759,7 +760,7 @@ int game_state_round_in_prog()
             // play okay (high) tone
             buzzer_play_tone(TONE_G4, 160);
 
-            update_on_match();
+            update_round_on_match();
         }
         else
         {
@@ -777,6 +778,7 @@ int game_state_round_in_prog()
      *  due to matches, move to next state */
     if (game_fixed_leds_mask_on == 0x00)
     {
+        // move to next state
         return GAME_ST_ROUND_DONE;
     }
 
