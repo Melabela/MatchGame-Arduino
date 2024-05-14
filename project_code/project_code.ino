@@ -789,7 +789,7 @@ int game_state_round_in_prog()
      */
 
     button_read();
-    if (button_pressed)
+    if (button_pressed && !button_pressed_last)
     {
         bool bHaveMatch = check_for_match();
         if (bHaveMatch)
