@@ -91,7 +91,7 @@ enum tones_e
 {
     TONE_OFF = -1,
     // -- idx[0] --
-    TONE_A2 = 0,  // 110Hz
+    TONE_A2 = 0,  // 110 Hz
     TONE_A2_sh,
     TONE_B2,
     TONE_C3,
@@ -104,7 +104,7 @@ enum tones_e
     TONE_G3,
     TONE_G3_sh,
     // -- idx[12] --
-    TONE_A3, // 220Hz
+    TONE_A3,  // 220 Hz
     TONE_A3_sh,
     TONE_B3,
     TONE_C4,
@@ -117,7 +117,7 @@ enum tones_e
     TONE_G4,
     TONE_G4_sh,
     // -- idx[24] --
-    TONE_A4, // 440Hz
+    TONE_A4,  // 440 Hz
 };
 
 word tone_hz[] = {
@@ -756,7 +756,15 @@ int game_state_round_in_prog()
         bool bHaveMatch = check_for_match();
         if (bHaveMatch)
         {
+            // play okay (high) tone
+            buzzer_play_tone(TONE_G4, 160);
+
             update_on_match();
+        }
+        else
+        {
+            // play incorrect (low) tone
+            buzzer_play_tone(TONE_C3, 160);
         }
     }
     else
