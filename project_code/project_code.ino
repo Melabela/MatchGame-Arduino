@@ -577,7 +577,6 @@ int game_state_start_game()
             buzzer_play_tone(TONE_OFF, 0);
             // move to next state
             return GAME_ST_ROUND_NEW;
-            break;
         }
     }
 
@@ -861,14 +860,40 @@ int game_state_end_game()
         lcd.print("Game Over.");
 
         // setup wait counter, to hold & display above msg
-        game_end_wait_frames = 6 * GAME_FRAMES_PER_SEC;
+        game_end_wait_frames = 1 + (6 * GAME_FRAMES_PER_SEC);
     }
 
     if (game_state_last == GAME_ST_END_GAME)
     {
         game_end_wait_frames--;
-        if (game_end_wait_frames == (3 * GAME_FRAMES_PER_SEC))
+
+        switch (game_end_wait_frames)
         {
+        case (GAME_FRAMES_PER_SEC * 60) / 10:
+            buzzer_play_tone(TONE_OFF, 0);
+            buzzer_play_tone(TONE_A3, 100);
+            break;
+        case (GAME_FRAMES_PER_SEC * 59) / 10:
+            buzzer_play_tone(TONE_OFF, 0);
+            buzzer_play_tone(TONE_G3_sh, 100);
+            break;
+        case (GAME_FRAMES_PER_SEC * 58) / 10:
+            buzzer_play_tone(TONE_OFF, 0);
+            buzzer_play_tone(TONE_F3_sh, 100);
+            break;
+        case (GAME_FRAMES_PER_SEC * 57) / 10:
+            buzzer_play_tone(TONE_OFF, 0);
+            buzzer_play_tone(TONE_E3, 100);
+            break;
+        case (GAME_FRAMES_PER_SEC * 56) / 10:
+            buzzer_play_tone(TONE_OFF, 0);
+            buzzer_play_tone(TONE_D3, 100);
+            break;
+        case (GAME_FRAMES_PER_SEC * 55) / 10:
+            buzzer_play_tone(TONE_OFF, 0);
+            break;
+
+        case (GAME_FRAMES_PER_SEC * 3):
             // display second game over msg
             lcd.clear();
             lcd.setCursor(2, 0);
@@ -876,9 +901,8 @@ int game_state_end_game()
             lcd.setCursor(0, 1);
             lcd.print("Your Score: ");
             lcd.print(game_score);
-        }
-        else if (game_end_wait_frames <= 0)
-        {
+            break;
+        case 0:
             // move back to pre-game, wait to start again
             return GAME_ST_WAIT_START;
         }
